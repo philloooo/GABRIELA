@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Untitled Document</title>
+		{% load staticfiles %}
+		<link href="{% static "diary/css/reset.css" %}" rel="stylesheet" type="text/css">
+		<!-- <link href="{% static "diary/css/mystyle.css" %}" rel="stylesheet" type="text/css"> -->
+		<link href="{% static "diary/css/mystyle.less" %}" rel="stylesheet/less" type="text/css">
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+		<script src="{% static "diary/js/less.js" %}" type="text/javascript"></script>
+		<script src="{% static "diary/js/jquery.js" %}" type="text/javascript"></script>
+	</head>	
+
+	<body>
+		<div class="wrapper">
+			<header></header>
+			<div class='marks'>
+				<div class='lastweek-mark'>a week ago</div>
+				<div class='yesterday-mark'>yesterday</div>
+				<div class='today-mark'>today</div>
+			</div>
+			<nav>
+				<div class='back'> ‹ </div>
+				{% for diary in diarys %}
+				<p style='display:none'>{{diary}}</p>
+				<div class={% if diary %}'full' {% else %} 'empty'{% endif %}><div></div></div>
+				{% endfor %}
+				<div class="today focus"><div></div></div>
+			</nav>
+			<!-- <div class="line"></div> -->
+			<section class="title">
+				<p class="date"></p>
+				<a href="#" class="weather"></a>
+			</section>
+			<article class='article' contenteditable=true>{{article}}</article>
+			<div class='prev' style='display:none'></div>
+			<!-- <article class='article' contenteditable>abc<br>bs</article> -->
+			<!-- <textarea class='article'>{{article}}</textarea> -->
+			<footer></footer>
+		</div>
+		<script type="text/javascript">
+			$(document).ready(function(){
+				var width=$("nav").children('div').width();
+				$("nav").children("div").css('height',width+'px');
+				getDate();
+				parseArticle();
+				function getCookie(name) {
+				    var cookieValue = null;
+				    if (document.cookie && document.cookie != '') {
+				        var cookies = document.cookie.split(';');
+				        for (var i = 0; i < cookies.length; i++) {
+				            var cookie = jQuery.trim(cookies[i]);
+				            // Does this cookie string begin with the name we want?
+				            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+				                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+				                break;
+				            }
+				        }
+				    }
+				    return cookieValue;
+				}
+				var csrftoken = getCookie('csrftoken');
+				function csrfSafeMethod(method) {
+				    // these HTTP methods do not require CSRF protection
+				    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+				}
+				$.ajaxSetup({
+				    // crossDomain: false, // obviates need for sameOrigin test
+				    beforeSend: function(xhr, settings) {
+				        if (!csrfSafeMethod(settings.type)) {
+				            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+				        }
+				    }
+				});
+				function parseArticle(){
+					var article=$(".article").html()
+					article=article.replace(/\n/gi,'<br>');
+					$('article').html(article)
+				}
+				function getDate(){
+					d=new Date();
+					d=d.toDateString().split(" ");
+					info=d[1]+" " + d[2]
+					$(".date").html(info);
+				}
+				
+				function getWeather(pos){
+					lat=pos.coords.latitude;
+					lont=pos.coords.longtitude;
+				$.ajax({
+				  url : "http://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lont,
+				  dataType : "jsonp",
+				  success : function(parsed_json) {
+				  // var location = parsed_json['location']['city'];
+				  var temp_f = parsed_json['weather']['main']
+				  code=parsed_json['weather'][0].icon
+				  icon=""
+                  w=parsed_json['weather']
+                  console.log(icon+","+code)
+				  if (code=="01d"){icon="B"}
+				  else if (code=='01n'){icon="B"}
+				  else if (code=='02d'){icon="H"}
+				  else if (code=='02n'){icon="H"}
+				  else if (code=='03d'){icon="N"}
+				  else if (code=='03n'){icon="N"}
+				  else if (code=='04d'){icon="5"}
+				  else if (code=='04n'){icon="5"}
+				  else if (code=='09d'){icon="R"}
+				  else if (code=='09n'){icon="R"}
+				  else if (code=='010d'){icon="Q"}
+				  else if (code=='10n'){icon="Q"}
+				  else if (code=='11d'){icon="O"}
+				  else if (code=='11n'){icon="O"}
+				  else if (code=='13d'){icon="W"}
+				  else if (code=='13n'){icon="W"}
+				  else if (code=='50d'){icon="E"}
+                  else if (code=='50f'){icon="E"}
+                  else {icon="A"}
+				  $(".weather").attr("data-icon",icon);
+				  }
+				  });	
+				}
+				console.log(navigator.geolocation)
+				navigator.geolocation.getCurrentPosition(getWeather,function(){console.log("error")});
+				function saveArticle(){
+					if ($('.article').attr('contenteditable')=='true'){
+						var article=$(".article").html().replace(/<div>/gi,'\n').replace(/<\/div>/gi,'').replace(/<br>/gi,'\n').replace(/<p>/gi,'\n').replace(/<\/p>/gi,'').replace(/nbsp;/gi,' ')
+						if (article.indexOf('\n')==0){
+							article=article.substr(1,article.length);
+						}
+						$.ajax({
+							type:"POST",
+							url:'saveArticle',
+							data:{article:article}
+						}).done(function(){console.log("saved")})
+					}
+				}
+				setInterval(saveArticle,1000);
+				function switchFocus(a){
+					$(".focus").removeClass("focus")
+					a.addClass("focus");
+				}
+				$(".full").click(function(){
+					switchFocus($(this));
+					a=$(this).prev().html().replace(/\n/gi,'<br>');
+					$('.prev').html(a);
+					$('.prev').css('display','block')
+					$('.article').css('display','none')
+				})
+				$('.today').click(function(){
+					switchFocus($(this));
+					$('.prev').css('display','block')
+					$('.article').css('display','none')	
+				})
+			})
+		</script>
+	</body>
+</html>

@@ -1,0 +1,71 @@
+@font-face {
+  font-family: "weather";
+  src: url("./meteocons.ttf") format("truetype");
+}
+body {
+  font-family: 'Open Sans', sans-serif;
+  background-color: white;
+  width: 100%;
+}
+.wrapper {
+  min-width: 840px;
+  width: 70%;
+  margin: auto;
+  margin-top: 5%;
+}
+nav a {
+  width: 12px;
+  height: 12px;
+  background-color: #CCCBCB;
+  border-radius: 50%;
+  display: inline-block;
+  font-size: 2em;
+  margin-right: 5%;
+}
+nav a:first-child {
+  background: none;
+  text-decoration: none;
+  color: gray;
+  font-family: monospace;
+  font-size: 2.5em;
+}
+nav a:last-child {
+  margin-right: 0px;
+}
+.title {
+  margin-top: 5%;
+  font-size: 2em;
+  color: gray;
+  font-weight: lighter;
+  height: 38px;
+}
+.date {
+  display: inline-block;
+}
+.weather {
+  margin-left: 2%;
+  font-family: "weather";
+  text-decoration: none;
+  font-size: 1.2em;
+  color: gray;
+  vertical-align: bottom;
+  display: inline-block;
+}
+.weather:before {
+  content: attr(data-icon);
+}
+article {
+  border-radius: 5px;
+  padding: 2%;
+  /*color:#797777;*/
+
+  font-weight: lighter;
+  line-height: 150%;
+  background: #eff8f3;
+  box-shadow: 0px 0px 5px white;
+  margin: 5% 0;
+  min-height: 300px;
+}
+article:focus {
+  outline: 0;
+}
